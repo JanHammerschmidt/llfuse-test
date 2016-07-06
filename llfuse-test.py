@@ -14,6 +14,9 @@ class Operations(llfuse.Operations):
         self.access_root = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH # read+execute
         self.access = stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH #read-only
         self.root_entry = self.construct_entry(llfuse.ROOT_INODE, stat.S_IFDIR | self.access_root, 1, int(time.time() * 1e9))
+        self.testfile_name = b'test.txt'
+        self.testfile_inode = llfuse.ROOT_INODE+1
+        self.testfile_entry = self.construct_entry(self.testfile_inode, stat.S_IFREG | self.access, 5, int(time.time() * 1e9))
 
     def construct_entry(self, inode, mode, size, time):
         entry = llfuse.EntryAttributes()
@@ -32,14 +35,16 @@ class Operations(llfuse.Operations):
 
         return entry
 
-    def getattr(self, inode, ctx):
+    def getattr(self, inode, ctx=None):
         log.info('getattr %i' % inode)
-        assert inode == llfuse.ROOT_INODE
-        # if inode == llfuse.ROOT_INODE:
-        #     raise llfuse.FUSEError(errno.ENOENT)
-        return self.root_entry
+        if inode == llfuse.ROOT_INODE:
+            return self.root_entry
+        elif inode == self.testfile_entry:
+            return self.testfile_entry
+        else:
+            raise llfuse.FUSEError(errno.ENOENT)
 
-    def opendir(self, inode, ctx):
+    def opendir(self, inode, ctx=None):
         log.info('opendir %i' % inode)
         # if inode != llfuse.ROOT_INODE:
         #     raise llfuse.FUSEError(errno.ENOENT)
@@ -55,16 +60,16 @@ class Operations(llfuse.Operations):
             inode = parent_inode
         elif name == '..':
             inode = llfuse.ROOT_INODE
+        elif name == self.testfile_name:
+            return self.testfile_entry
         else:
             raise llfuse.FUSEError(errno.ENOENT)
-        return self.getattr(inode)
+        return self.getattr(inode, ctx)
 
-    def readdir(self, fh, off):
-        log.info('readdir %i/%i' % (fh, off))
-        # raise llfuse.FUSEError(errno.ENOENT)
-        if False:
-            yield (0,0,0)
-        #return iter([])
+    def readdir(self, inode, off):
+        log.info('readdir %i/%i' % (inode, off))
+        if inode == llfuse.ROOT_INODE and off == 0:
+            yield (self.testfile_name, self.testfile_entry, 1)
 
     def statfs(self, ctx):
         sfs = llfuse.StatvfsData()
