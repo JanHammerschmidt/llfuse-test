@@ -1,4 +1,4 @@
-import sys, logging, errno, stat, os
+import sys, logging, errno, stat, os, time
 import llfuse
 
 mountpoint = 'llfuse-test'
@@ -13,9 +13,9 @@ class Operations(llfuse.Operations):
         self.uid = os.getuid()
         self.access_root = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH # read+execute
         self.access = stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH #read-only
-        self.root_entry = self.construct_entry(llfuse.ROOT_INODE, stat.S_IFDIR | self.access_root, 0)
+        self.root_entry = self.construct_entry(llfuse.ROOT_INODE, stat.S_IFDIR | self.access_root, 1, int(time.time() * 1e9))
 
-    def construct_entry(self, inode, mode, size):
+    def construct_entry(self, inode, mode, size, time):
         entry = llfuse.EntryAttributes()
         entry.st_ino = inode
         entry.st_mode = mode
@@ -26,9 +26,9 @@ class Operations(llfuse.Operations):
         entry.st_gid = self.gid
 
         # entry.st_blocks = 1
-        entry.st_atime_ns = 0
-        entry.st_mtime_ns = 0
-        entry.st_ctime_ns = 0
+        entry.st_atime_ns = time
+        entry.st_mtime_ns = time
+        entry.st_ctime_ns = time
 
         return entry
 
