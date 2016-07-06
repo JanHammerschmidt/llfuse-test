@@ -110,10 +110,14 @@ if __name__ == '__main__':
     # fuse_options.discard('default_permissions')
     # fuse_options.add('defer_permissions')
 
-    llfuse.init(Operations(), mountpoint, fuse_options)
     try:
-        llfuse.main(workers=1)
-    except:
+        llfuse.init(Operations(), mountpoint, fuse_options)
+    except Exception as e:
+        print(str(e))
+    else:
+        try:
+            llfuse.main(workers=1)
+        except:
+            llfuse.close()
+            raise
         llfuse.close()
-        raise
-    llfuse.close()
