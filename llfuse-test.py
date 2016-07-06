@@ -18,19 +18,14 @@ class Operations(llfuse.Operations):
     def construct_entry(self, inode, mode, size):
         entry = llfuse.EntryAttributes()
         entry.st_ino = inode
-        entry.generation = 0
-        entry.entry_timeout = 300
-        entry.attr_timeout = 300
         entry.st_mode = mode
-        entry.st_nlink = 1
+        # entry.st_nlink = 1
         entry.st_size = size
 
         entry.st_uid = self.uid
         entry.st_gid = self.gid
-        entry.st_rdev = 0
 
-        entry.st_blksize = 512
-        entry.st_blocks = 1
+        # entry.st_blocks = 1
         entry.st_atime_ns = 0
         entry.st_mtime_ns = 0
         entry.st_ctime_ns = 0
